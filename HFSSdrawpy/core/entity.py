@@ -394,5 +394,3 @@ class Entity:
             tool_entities, main=self, keep_originals=keep_originals, new_name=new_name
         )
 
-    def assign_impedance(self, ResistanceSq, ReactanceSq):
-        self.body.interface.assign_impedance(self, ResistanceSq, ReactanceSq)

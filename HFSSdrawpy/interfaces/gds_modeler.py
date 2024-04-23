@@ -172,6 +172,35 @@ class GdsModeler:
             name=kwargs["name"] + "b",
             number_of_points=6,
         )
+        
+    # def airbridge(self, pos, ori, ymax, ymin, height="0.1mm", **kwargs):  # ori should be normed
+    #     ## NOT WORKING ##
+    #     width = 20e-6
+    #     length = 70e-6
+    #     track = 40e-6
+    #     ab_gap = 2e-6
+    #     ab_foot_w = 20e-6
+    #     ab_foot_l = 40e-6
+        
+    #     pos, ori, ymax, ymin, heigth = parse_entry(
+    #         (pos, ori, ymax, ymin, height)
+    #     )
+    #     foot1 = pos + ori.orth() * (ab_gap+(track + ab_foot_w)/2)
+    #     foot2 = pos - ori.orth() * (ab_gap+(track + ab_foot_w)/2)
+    #     # self.rect_center(pos, [length, width], name=name + "_1_%d" % (bond_number), layer=DEFAULT)                    
+    #     self.rect_center(
+    #         [foot1], 
+    #         [ab_foot_w, ab_foot_l], 
+    #         layer=kwargs["layer"],
+    #         name=kwargs["name"] + "a"
+    #     )
+    #     self.rect_center(
+    #         [foot2], 
+    #         [ab_foot_w, ab_foot_l], 
+    #         layer=kwargs["layer"],
+    #         name=kwargs["name"] + "b"
+    #     )
+
 
     def path(self, points, port, fillet, name="", corner="circular bend"):
 

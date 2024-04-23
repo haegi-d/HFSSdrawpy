@@ -13,10 +13,12 @@ sympy.init_printing(use_latex=False)
 
 class Modeler:
     """
-    Modeler which defines basic operations and methods to perform on Entity and on the chosen interface.
-    To create a new interface, one needs to copy an existing one in a new file, and adapt all methods to the formalism of the new interface.
+    Modeler which defines basic operations and methods to perform on Entity and 
+    on the chosen interface. To create a new interface, one needs to copy an existing 
+    one in a new file, and adapt all methods to the formalism of the new interface.
 
-    The Modeler class is called at the beginning of a script but then it is the body that is always used.
+    The Modeler class is called at the beginning of a script but then it is the body 
+    that is always used.
     The syntax is the following:
         # TODO
 

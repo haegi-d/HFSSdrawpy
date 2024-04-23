@@ -2,7 +2,7 @@ from functools import wraps
 
 import numpy as np
 
-from ..parameters import DEFAULT, MASK, MESH, PORT
+from ..parameters import DEFAULT, MASK, MESH, PORT, RLC
 from ..path_finding.path_finder import Path
 from ..utils import (
     Vector,
@@ -336,6 +336,25 @@ class Body(Modeler):
         else:
             self.interface.wirebond(pos, ori, ymax, ymin, **kwargs)
             return Entity(3, self, **kwargs)
+        
+    # @set_body
+    # def airbridge(self, pos, ori, ymax, ymin, name="ab_0", **kwargs):
+    #     #Note
+    #     pos, ymax, ymin = parse_entry(pos, ymax, ymin)
+    #     name = check_name(Entity, name)
+    #     kwargs["name"] = name
+    #     self.rect
+    #     if self.mode == "gds":
+    #         pos, ori, ymax, ymin = val(pos, ori, ymax, ymin)
+    #         self.interface.airbridge(pos, ori, ymax, ymin, **kwargs)
+    #         kwargs["name"] = name + "a"
+    #         entity_a = Entity(2, self, **kwargs)
+    #         kwargs["name"] = name + "b"
+    #         entity_b = Entity(2, self, **kwargs)
+    #         return entity_a, entity_b
+    #     else:
+    #         self.interface.airbridge(pos, ori, ymax, ymin, **kwargs)
+    #         return Entity(3, self, **kwargs)
 
     @set_body
     def text(self, pos, size, text, angle=0, horizontal=True, name="text_0", **kwargs):
@@ -566,6 +585,7 @@ class Body(Modeler):
         *ports,
         fillet="0.3mm",
         is_bond=False,
+        bond_min_dist="0.5mm",
         to_meander=None,
         meander_length=0,
         meander_offset=0,
@@ -575,7 +595,7 @@ class Body(Modeler):
         mesh_size=None,
         slanted=False
     ):
-        """
+        """ 
 
 
         Parameters
@@ -697,6 +717,7 @@ class Body(Modeler):
                         *_ports,
                         fillet=fillet,
                         is_bond=is_bond,
+                        bond_min_dist=bond_min_dist,
                         to_meander=[to_meander[cable_portion]],
                         meander_length=[meander_length[cable_portion]],
                         meander_offset=[meander_offset[cable_portion]],
@@ -774,7 +795,7 @@ class Body(Modeler):
 
             # if bond plot bonds
             if is_bond:
-                self.draw_bond(total_path.to_bond(), *ports[0].bond_params(), name=name + "_wb")
+                self.draw_bond(total_path.to_bond(), *ports[0].bond_params(), min_dist=bond_min_dist, name=name + "_wb")
 
             ports[0].revert()
             ports[-1].revert()
@@ -809,29 +830,64 @@ class Body(Modeler):
             if is_bond:
                 raise Exception("Bonding is not supported with slanted cables")
 
-    def draw_bond(self, to_bond, ymax, ymin, min_dist="0.5mm", name="wb_0"):
-        # to_bond list of segments
-        ymax, ymin, min_dist = parse_entry(ymax, ymin, min_dist)
+    def draw_bond(self, to_bond, ymax, ymin, airbridge = True, min_dist="0.5mm", name="wb_0"):
+        """
+        Draws wire bonds between segments in the given list.
 
+        Args:
+            to_bond (list): List of segments to bond.
+            ymax (str): Maximum y-coordinate of the wire bond.
+            ymin (str): Minimum y-coordinate of the wire bond.
+            min_dist (str, optional): Minimum distance between wire bonds. Defaults to "0.5mm".
+            name (str, optional): Name of the wire bond. Defaults to "wb_0".
+        """
+        # Parse input values
+        ymax, ymin, min_dist = parse_entry(ymax, ymin, min_dist)
         min_dist = val(min_dist)
+
         n_segments = len(to_bond)
         jj = 0
         bond_number = 0
+
         while jj < n_segments:
             elt = to_bond[jj]
             A = elt[0]
             B = elt[1]
+
+            # Check if the next segment is connected to the current segment
             if jj + 1 < n_segments and to_bond[jj + 1][0] == B:
                 B = to_bond[jj + 1][1]
                 jj += 1
+
             val_BA = val(B - A)
             ori = way(val_BA)
             length = Vector(val_BA).norm()
+
+            # Calculate the number of wire bonds needed based on the minimum distance
             n_bond = int(length / val(min_dist)) + 1
             spacing = (B - A).norm() / n_bond
-            pos = A + ori * spacing / 2
+            pos = A + ori * spacing /2
+
+            # Draw wire bonds along the segment
             for ii in range(n_bond):
-                self.wirebond(pos, ori, ymax, ymin, name=name + "_%d" % (bond_number))
+                # pos = pos + ori * spacing
+                if airbridge:
+                    width = 20e-6
+                    length = 70e-6
+                    track = 40e-6
+                    ab_gap = 2e-6
+                    ab_foot_w = 20e-6
+                    ab_foot_l = 40e-6
+                    foot1 = pos + ori.orth() * (ab_gap+(track + ab_foot_w)/2)
+                    foot2 = pos - ori.orth() * (ab_gap+(track + ab_foot_w)/2)
+                    self.rect_center(pos, ori*width + ori.orth()*length, name=name + "_1_%d" % (bond_number), layer=DEFAULT)                    
+                    self.rect_center(foot1, ori*ab_foot_l + ori.orth()*ab_foot_w, name=name + "_2_%d" % (bond_number), layer=RLC)
+                    self.rect_center(foot2, ori*ab_foot_l + ori.orth()*ab_foot_w, name=name + "_3_%d" % (bond_number), layer=RLC)
+         
+                    # self.airbridge(pos, ori, ymax, ymin, name=name + "_%d" % (bond_number))
+                else:
+                    self.wirebond(pos, ori, ymax, ymin, name=name + "_%d" % (bond_number))
                 bond_number += 1
                 pos = pos + ori * spacing
+
             jj += 1

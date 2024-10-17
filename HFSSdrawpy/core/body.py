@@ -585,6 +585,7 @@ class Body(Modeler):
         *ports,
         fillet="0.3mm",
         is_bond=False,
+        airbridge=True,
         bond_min_dist="0.5mm",
         to_meander=None,
         meander_length=0,
@@ -717,6 +718,7 @@ class Body(Modeler):
                         *_ports,
                         fillet=fillet,
                         is_bond=is_bond,
+                        airbridge=airbridge,
                         bond_min_dist=bond_min_dist,
                         to_meander=[to_meander[cable_portion]],
                         meander_length=[meander_length[cable_portion]],
@@ -795,7 +797,7 @@ class Body(Modeler):
 
             # if bond plot bonds
             if is_bond:
-                self.draw_bond(total_path.to_bond(), *ports[0].bond_params(), min_dist=bond_min_dist, name=name + "_wb")
+                self.draw_bond(total_path.to_bond(), *ports[0].bond_params(), airbridge=airbridge, min_dist=bond_min_dist, name=name + "_wb")
 
             ports[0].revert()
             ports[-1].revert()
@@ -873,10 +875,10 @@ class Body(Modeler):
                 # pos = pos + ori * spacing
                 if airbridge:
                     width = 20e-6
-                    length = 70e-6
+                    length = 100e-6
                     track = 40e-6
-                    ab_gap = 2e-6
-                    ab_foot_w = 20e-6
+                    ab_gap = 5e-6
+                    ab_foot_w = 40e-6
                     ab_foot_l = 40e-6
                     foot1 = pos + ori.orth() * (ab_gap+(track + ab_foot_w)/2)
                     foot2 = pos - ori.orth() * (ab_gap+(track + ab_foot_w)/2)
